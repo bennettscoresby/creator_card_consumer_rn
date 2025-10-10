@@ -1,15 +1,48 @@
 import { Image } from 'expo-image';
+import { useContext, useEffect } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
 import { ExternalLink } from '@/components/external-link';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Collapsible } from '@/components/ui/collapsible';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
+import { AuthContext } from '@/Providers/AuthProvider';
 
 export default function TabTwoScreen() {
+
+  useEffect(() => {
+    console.log(session);
+  }, []);
+  const { isAuthenticated, session } = useContext(AuthContext);
+
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
+        headerImage={
+          <IconSymbol
+            size={310}
+            color="#808080"
+            name="lock.fill"
+            style={styles.headerImage}
+          />
+        }>
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title" style={{ fontFamily: Fonts.rounded }}>
+            Authentication Required
+          </ThemedText>
+        </ThemedView>
+        <ThemedText>
+          Please log in to access the Explore section.
+        </ThemedText>
+      </ParallaxScrollView>
+    );
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
@@ -27,7 +60,7 @@ export default function TabTwoScreen() {
           style={{
             fontFamily: Fonts.rounded,
           }}>
-          Explore
+          {`Welcome, ${session?.identity?.traits.email}`}
         </ThemedText>
       </ThemedView>
       <ThemedText>This app includes example code to help you get started.</ThemedText>

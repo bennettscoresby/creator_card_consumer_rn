@@ -1,3 +1,5 @@
+import AuthProvider from '@/Providers/AuthProvider';
+import ProjectProvider from '@/Providers/ProjectProvider';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -14,10 +16,15 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
+      <ProjectProvider>
+        <AuthProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          </Stack>
+
+        </AuthProvider>
+      </ProjectProvider>
       <StatusBar style="auto" />
     </ThemeProvider>
   );

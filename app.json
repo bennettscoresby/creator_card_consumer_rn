@@ -8,6 +8,9 @@
     "scheme": "consumerrn",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "extra": {
+      "kratosUrl": "https://playground.projects.oryapis.com/"
+    },
     "ios": {
       "supportsTablet": true
     },
