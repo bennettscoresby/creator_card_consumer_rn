@@ -5,7 +5,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthContext } from '@/Providers/AuthProvider';
 import { ProjectContext } from '@/Providers/ProjectProvider';
 import type { LoginFlow, UpdateLoginFlowBody } from '@ory/client';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 
@@ -17,20 +17,15 @@ export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const theme = colorScheme ?? 'light';
 
-  const { setSession, isAuthenticated } = useContext(AuthContext);
+  const { setSession, isAuthenticated, session } = useContext(AuthContext);
   const { sdk } = useContext(ProjectContext);
 
-  // Redirect if already authenticated
+  // Initialize the login flow when component mounts (only if not authenticated)
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/(tabs)');
+    if (!isAuthenticated) {
+      initializeLoginFlow();
     }
   }, [isAuthenticated]);
-
-  // Initialize the login flow when component mounts
-  useEffect(() => {
-    initializeLoginFlow();
-  }, []);
 
   const initializeLoginFlow = async () => {
     try {
@@ -65,6 +60,7 @@ export default function LoginScreen() {
           identifier: email,
         } as UpdateLoginFlowBody,
       });
+
 
       // Extract the session token from the response
       const sessionToken = data.session_token;
@@ -104,6 +100,96 @@ export default function LoginScreen() {
     }
   };
 
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              // Clear the session
+              setSession(null);
+              // Navigate to home screen
+              router.replace('/(tabs)');
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Error', 'An error occurred during logout. Please try again.');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Show logout UI if authenticated
+  if (isAuthenticated) {
+    return (
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled">
+          <ThemedView style={styles.content}>
+            <ThemedView style={styles.header}>
+              <ThemedText type="title" style={styles.title}>
+                You're Logged In
+              </ThemedText>
+              <ThemedText style={styles.subtitle}>
+                Welcome, {session?.identity?.traits?.email || 'User'}
+              </ThemedText>
+            </ThemedView>
+
+            <ThemedView style={styles.form}>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: '#ff4444',
+                    opacity: loading ? 0.6 : 1,
+                  },
+                ]}
+                onPress={handleLogout}
+                disabled={loading}
+                activeOpacity={0.8}>
+                {loading ? (
+                  <ThemedView style={{ backgroundColor: 'transparent', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <ThemedText
+                      style={[
+                        styles.buttonText,
+                        { color: '#fff' },
+                      ]}>
+                      Logging Out...
+                    </ThemedText>
+                  </ThemedView>
+                ) : (
+                  <ThemedText
+                    style={[
+                      styles.buttonText,
+                      { color: '#fff' },
+                    ]}>
+                    Logout
+                  </ThemedText>
+                )}
+              </TouchableOpacity>
+            </ThemedView>
+          </ThemedView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // Show login UI if not authenticated
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -209,6 +295,14 @@ export default function LoginScreen() {
                 Forgot Password?
               </ThemedText>
             </TouchableOpacity>
+
+            <Link href="/register" asChild>
+              <TouchableOpacity style={styles.registerLink}>
+                <ThemedText style={styles.registerText}>
+                  Don't have an account? <ThemedText style={[styles.registerText, { color: Colors[theme].tint }]}>Register</ThemedText>
+                </ThemedText>
+              </TouchableOpacity>
+            </Link>
           </ThemedView>
         </ThemedView>
       </ScrollView>
@@ -273,6 +367,14 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: 14,
     opacity: 0.7,
+  },
+  registerLink: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  registerText: {
+    fontSize: 14,
+    opacity: 0.8,
   },
 });
 
