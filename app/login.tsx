@@ -17,7 +17,7 @@ export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const theme = colorScheme ?? 'light';
 
-  const { setSession, isAuthenticated, session } = useContext(AuthContext);
+  const { setSession, isAuthenticated } = useContext(AuthContext);
   const { sdk } = useContext(ProjectContext);
 
   // Initialize the login flow when component mounts (only if not authenticated)
@@ -100,93 +100,12 @@ export default function LoginScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              // Clear the session
-              setSession(null);
-              // Navigate to home screen
-              router.replace('/(tabs)');
-            } catch (error) {
-              console.error('Logout error:', error);
-              Alert.alert('Error', 'An error occurred during logout. Please try again.');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
 
-  // Show logout UI if authenticated
+
+  // Redirect to tabs if authenticated (logout is now handled in account page)
   if (isAuthenticated) {
-    return (
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled">
-          <ThemedView style={styles.content}>
-            <ThemedView style={styles.header}>
-              <ThemedText type="title" style={styles.title}>
-                You're Logged In
-              </ThemedText>
-              <ThemedText style={styles.subtitle}>
-                Welcome, {session?.identity?.traits?.email || 'User'}
-              </ThemedText>
-            </ThemedView>
-
-            <ThemedView style={styles.form}>
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor: '#ff4444',
-                    opacity: loading ? 0.6 : 1,
-                  },
-                ]}
-                onPress={handleLogout}
-                disabled={loading}
-                activeOpacity={0.8}>
-                {loading ? (
-                  <ThemedView style={{ backgroundColor: 'transparent', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <ThemedText
-                      style={[
-                        styles.buttonText,
-                        { color: '#fff' },
-                      ]}>
-                      Logging Out...
-                    </ThemedText>
-                  </ThemedView>
-                ) : (
-                  <ThemedText
-                    style={[
-                      styles.buttonText,
-                      { color: '#fff' },
-                    ]}>
-                    Logout
-                  </ThemedText>
-                )}
-              </TouchableOpacity>
-            </ThemedView>
-          </ThemedView>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    );
+    router.replace('/(tabs)');
+    return null;
   }
 
   // Show login UI if not authenticated

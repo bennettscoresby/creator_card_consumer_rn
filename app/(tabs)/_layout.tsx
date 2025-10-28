@@ -1,5 +1,5 @@
-import { Tabs } from 'expo-router';
-import React, { useContext } from 'react';
+import { Tabs, router } from 'expo-router';
+import React, { useContext, useEffect } from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -9,7 +9,14 @@ import { AuthContext } from '@/Providers/AuthProvider';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { isAuthenticated } = useContext(AuthContext)
+  const { isAuthenticated, didFetch } = useContext(AuthContext);
+
+  // Navigate to login screen if not authenticated
+  useEffect(() => {
+    if (didFetch && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, didFetch]);
 
   return (
     <Tabs
@@ -17,6 +24,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
+        // Hide tab bar when not authenticated
+        tabBarStyle: isAuthenticated ? undefined : { display: 'none' },
       }}>
       <Tabs.Screen
         name="index"
@@ -30,17 +39,16 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-          // Hide the tab when user is not authenticated
-          href: isAuthenticated ? '/explore' : null,
         }}
       />
       <Tabs.Screen
-        name="login"
+        name="account"
         options={{
-          title: isAuthenticated ? 'Logout' : 'Login',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name={isAuthenticated ? 'rectangle.portrait.and.arrow.right' : 'person.circle'} color={color} />,
+          title: 'Account',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.circle" color={color} />,
         }}
       />
+
     </Tabs>
   );
 }
