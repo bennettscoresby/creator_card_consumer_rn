@@ -2,16 +2,34 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { marqetaService } from '@/helpers/marqeta-service';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { CardListResponse } from '@/marqeta-sdk';
 import { AuthContext } from '@/Providers/AuthProvider';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const theme = colorScheme ?? 'light';
-  const { isAuthenticated } = useContext(AuthContext);
-  const [cards, setCards] = useState(null);
+  const { isAuthenticated, session } = useContext(AuthContext);
+  const [cards, setCards] = useState<CardListResponse | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchCards = async () => {
+        try {
+          const cardsData = await marqetaService.getUserCards(session?.identity?.traits?.marqeta_token);
+          console.log("Cards data:", cardsData);
+          setCards(cardsData);
+        } catch (error) {
+          console.error("Failed to fetch cards:", error);
+        }
+      };
+
+      fetchCards();
+    }
+  }, [isAuthenticated]);
 
   // Show login prompt if not authenticated
   if (!isAuthenticated) {
@@ -32,8 +50,8 @@ export default function HomeScreen() {
       {/* Header */}
       <ThemedView style={[styles.header, { backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa' }]}>
         <View style={styles.greeting}>
-          <ThemedText style={styles.greetingText}>Good morning,</ThemedText>
-          <ThemedText style={styles.nameText}>Alex</ThemedText>
+          <ThemedText style={styles.greetingText}>Welcome,</ThemedText>
+          <ThemedText style={styles.nameText}>{session?.identity?.traits?.first_name}</ThemedText>
         </View>
         <TouchableOpacity style={styles.notificationButton}>
           <IconSymbol name="bell" size={24} color={Colors[theme].tint} />

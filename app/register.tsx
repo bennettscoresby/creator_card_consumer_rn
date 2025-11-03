@@ -188,8 +188,8 @@ export default function RegisterScreen() {
 
 
 
-      // Navigate to home screen
-      router.replace('/(tabs)');
+      // Dismiss the registration modal to reveal the authenticated dashboard
+      router.dismissAll();
 
     } catch (error: any) {
       console.error('Registration error:', error);

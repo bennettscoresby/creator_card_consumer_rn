@@ -1,6 +1,15 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
-import { CardHolderModel, Configuration, UserCardHolderResponse, UsersApi } from '../marqeta-sdk';
+import {
+  CardHolderModel,
+  CardListResponse,
+  CardProductListResponse,
+  CardProductsApi,
+  CardsApi,
+  Configuration,
+  UserCardHolderResponse,
+  UsersApi
+} from '../marqeta-sdk';
 import { resilience } from './axios';
 
 interface MarqetaUserData {
@@ -18,6 +27,8 @@ interface MarqetaUserData {
 
 class MarqetaService {
   private usersApi: UsersApi;
+  private cardProductsApi: CardProductsApi;
+  private cardsApi: CardsApi;
 
   constructor() {
     const baseURL = Constants.expoConfig?.extra?.marqetaBaseUrl;
@@ -39,6 +50,8 @@ class MarqetaService {
     });
 
     this.usersApi = new UsersApi(configuration, baseURL, axiosWithRetry);
+    this.cardProductsApi = new CardProductsApi(configuration, baseURL, axiosWithRetry);
+    this.cardsApi = new CardsApi(configuration, baseURL, axiosWithRetry);
   }
 
   async createUser(userData: MarqetaUserData): Promise<UserCardHolderResponse> {
@@ -74,6 +87,28 @@ class MarqetaService {
       return response.data;
     } catch (error) {
       console.error('Marqeta get user failed:', error);
+      throw error;
+    }
+  }
+
+  async getAllCardProducts(): Promise<CardProductListResponse> {
+    try {
+      console.log('Getting all Marqeta card products');
+      const response = await this.cardProductsApi.getCardproducts();
+      return response.data;
+    } catch (error) {
+      console.error('Marqeta get card products failed:', error);
+      throw error;
+    }
+  }
+
+  async getUserCards(userToken: string): Promise<CardListResponse> {
+    try {
+      console.log('Getting cards for Marqeta user:', userToken);
+      const response = await this.cardsApi.getCardsUserToken(userToken);
+      return response.data;
+    } catch (error) {
+      console.error('Marqeta get user cards failed:', error);
       throw error;
     }
   }

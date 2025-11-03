@@ -76,8 +76,8 @@ export default function LoginScreen() {
         session: session,
       });
 
-      // Navigate to home screen
-      router.replace('/(tabs)');
+      // Dismiss the login modal to reveal the authenticated dashboard
+      router.dismissAll();
 
     } catch (error: any) {
       console.error('Login error:', error);
