@@ -2,34 +2,23 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { marqetaService } from '@/helpers/marqeta-service';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { CardListResponse } from '@/marqeta-sdk';
+import { ActiveCardContext } from '@/Providers/ActiveCardProvider';
 import { AuthContext } from '@/Providers/AuthProvider';
-import { useContext, useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import { useContext } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const theme = colorScheme ?? 'light';
   const { isAuthenticated, session } = useContext(AuthContext);
-  const [cards, setCards] = useState<CardListResponse | null>(null);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const fetchCards = async () => {
-        try {
-          const cardsData = await marqetaService.getUserCards(session?.identity?.traits?.marqeta_token);
-          console.log("Cards data:", cardsData);
-          setCards(cardsData);
-        } catch (error) {
-          console.error("Failed to fetch cards:", error);
-        }
-      };
-
-      fetchCards();
-    }
-  }, [isAuthenticated]);
+  const {
+    activeCard,
+    cardType,
+    cardNumber,
+    influencer,
+  } = useContext(ActiveCardContext);
 
   // Show login prompt if not authenticated
   if (!isAuthenticated) {
@@ -61,50 +50,77 @@ export default function HomeScreen() {
       {/* Active Influencer Card Section */}
       <ThemedView style={[styles.section, { backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa' }]}>
         <ThemedText style={styles.sectionTitle}>Active Influencer Card</ThemedText>
-        <ThemedText style={styles.sectionSubtitle}>Choose which influencer to promote with your card</ThemedText>
+        <ThemedText style={styles.sectionSubtitle}>
+          {cardType ? `Card Type: ${cardType}` : 'Choose which influencer to promote with your card'}
+        </ThemedText>
 
-        <TouchableOpacity style={[styles.dropdown, { backgroundColor: theme === 'dark' ? '#2a2a2a' : '#ffffff', borderColor: theme === 'dark' ? '#333' : '#e0e0e0' }]}>
-          <View style={styles.dropdownContent}>
-            <ThemedText style={styles.influencerName}>@TechGuru</ThemedText>
-            <ThemedText style={styles.influencerCategory}>Technology</ThemedText>
-          </View>
-          <IconSymbol name="chevron.down" size={16} color={Colors[theme].text} />
-        </TouchableOpacity>
+        {activeCard ? (
+          <TouchableOpacity
+            style={[styles.dropdown, { backgroundColor: theme === 'dark' ? '#2a2a2a' : '#ffffff', borderColor: theme === 'dark' ? '#333' : '#e0e0e0' }]}
+            onPress={() => router.push('/cards')}
+          >
+            <View style={styles.dropdownContent}>
+              <ThemedText style={styles.influencerName}>
+                {influencer?.name || '@TechGuru'}
+              </ThemedText>
+              <ThemedText style={styles.influencerCategory}>
+                {cardType || 'Technology'}
+              </ThemedText>
+            </View>
+            <IconSymbol name="chevron.down" size={16} color={Colors[theme].text} />
+          </TouchableOpacity>
+        ) : (
+          <ThemedText style={styles.noCardText}>No cards available</ThemedText>
+        )}
       </ThemedView>
 
       {/* Card Display */}
       <ThemedView style={[styles.section, { backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa' }]}>
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View>
-              <ThemedText style={styles.balanceLabel}>Balance</ThemedText>
-              <ThemedText style={styles.balanceAmount}>$2,847.5</ThemedText>
+        {activeCard ? (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View>
+                <ThemedText style={styles.balanceLabel}>Balance</ThemedText>
+                <ThemedText style={styles.balanceAmount}>$2,847.5</ThemedText>
+              </View>
+              <View style={styles.influenceSection}>
+                <ThemedText style={styles.influenceLabel}>
+                  {cardType === 'CREDIT' ? 'CREDIT' : 'PREPAID'}
+                </ThemedText>
+                <ThemedText style={styles.influenceName}>
+                  {influencer?.name || '@TechGuru'}
+                </ThemedText>
+              </View>
             </View>
-            <View style={styles.influenceSection}>
-              <ThemedText style={styles.influenceLabel}>INFLUENCE</ThemedText>
-              <ThemedText style={styles.influenceName}>@TechGuru</ThemedText>
-            </View>
-          </View>
 
-          <View style={styles.cardNumber}>
-            <ThemedText style={styles.cardNumberText}>**** **** **** 9012</ThemedText>
-            <View style={styles.cardIcons}>
-              <IconSymbol name="eye" size={16} color="#ffffff" />
-              <IconSymbol name="doc.on.doc" size={16} color="#ffffff" />
+            <View style={styles.cardNumberContainer}>
+              <ThemedText style={styles.cardNumberText}>
+                {cardNumber || '**** **** **** ****'}
+              </ThemedText>
+              <View style={styles.cardIcons}>
+                <IconSymbol name="eye" size={16} color="#ffffff" />
+                <IconSymbol name="doc.on.doc" size={16} color="#ffffff" />
+              </View>
             </View>
-          </View>
 
-          <View style={styles.cardFooter}>
-            <View>
-              <ThemedText style={styles.cardholderLabel}>CARDHOLDER</ThemedText>
-              <ThemedText style={styles.cardholderName}>Alex Johnson</ThemedText>
-            </View>
-            <View>
-              <ThemedText style={styles.validThruLabel}>Valid Thru</ThemedText>
-              <ThemedText style={styles.validThruDate}>12/27</ThemedText>
+            <View style={styles.cardFooter}>
+              <View>
+                <ThemedText style={styles.cardholderLabel}>CARDHOLDER</ThemedText>
+                <ThemedText style={styles.cardholderName}>
+                  {session?.identity?.traits?.first_name} {session?.identity?.traits?.last_name}
+                </ThemedText>
+              </View>
+              <View>
+                <ThemedText style={styles.validThruLabel}>Valid Thru</ThemedText>
+                <ThemedText style={styles.validThruDate}>
+                  {activeCard.expiration || '12/27'}
+                </ThemedText>
+              </View>
             </View>
           </View>
-        </View>
+        ) : (
+          <ThemedText style={styles.noCardText}>No card to display</ThemedText>
+        )}
       </ThemedView>
 
       {/* Stats Section */}
@@ -316,7 +332,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  cardNumber: {
+  cardNumberContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -444,5 +460,16 @@ const styles = StyleSheet.create({
   transactionDate: {
     fontSize: 12,
     opacity: 0.6,
+  },
+  loadingText: {
+    textAlign: 'center',
+    padding: 16,
+    opacity: 0.7,
+  },
+  noCardText: {
+    textAlign: 'center',
+    padding: 16,
+    opacity: 0.7,
+    fontStyle: 'italic',
   },
 });

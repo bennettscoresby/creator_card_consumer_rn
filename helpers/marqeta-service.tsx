@@ -4,7 +4,9 @@ import {
   CardHolderModel,
   CardListResponse,
   CardProductListResponse,
+  CardProductResponse,
   CardProductsApi,
+  CardResponse,
   CardsApi,
   Configuration,
   UserCardHolderResponse,
@@ -109,6 +111,28 @@ class MarqetaService {
       return response.data;
     } catch (error) {
       console.error('Marqeta get user cards failed:', error);
+      throw error;
+    }
+  }
+
+  async getCard(cardToken: string): Promise<CardResponse> {
+    try {
+      console.log('Getting card:', cardToken);
+      const response = await this.cardsApi.getCardsToken(cardToken);
+      return response.data;
+    } catch (error) {
+      console.error('Marqeta get card failed:', error);
+      throw error;
+    }
+  }
+
+  async getCardProduct(cardProductToken: string): Promise<CardProductResponse> {
+    try {
+      console.log('Getting card product:', cardProductToken);
+      const response = await this.cardProductsApi.getCardproductsToken(cardProductToken);
+      return response.data;
+    } catch (error) {
+      console.error('Marqeta get card product failed:', error);
       throw error;
     }
   }

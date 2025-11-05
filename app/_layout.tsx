@@ -1,3 +1,4 @@
+import ActiveCardProvider from '@/Providers/ActiveCardProvider';
 import AuthProvider from '@/Providers/AuthProvider';
 import ProjectProvider from '@/Providers/ProjectProvider';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
@@ -24,20 +25,22 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <ProjectProvider>
-
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="login"
-                options={{
-                  headerShown: false,
-                  presentation: 'modal',
-                  gestureEnabled: false,
-                }}
-              />
-              <Stack.Screen name="register" options={{ title: 'Create Account' }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-            </Stack>
+            <ActiveCardProvider>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="login"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                    gestureEnabled: false,
+                  }}
+                />
+                <Stack.Screen name="register" options={{ title: 'Create Account' }} />
+                <Stack.Screen name="cards" options={{ title: 'My Cards', presentation: 'modal' }} />
+                <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+              </Stack>
+            </ActiveCardProvider>
           </ProjectProvider>
           <StatusBar style="auto" />
         </ThemeProvider>
