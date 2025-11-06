@@ -4,7 +4,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useCards } from '@/hooks/use-cards';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { CardResponse } from '@/marqeta-sdk';
+import { CardListResponse, CardResponse } from '@/marqeta-sdk';
 import { ActiveCardContext } from '@/Providers/ActiveCardProvider';
 import { useContext, useState } from 'react';
 import {
@@ -59,7 +59,7 @@ export default function CardsScreen() {
     );
   }
 
-  const cards = cardsData?.data || [];
+  const cards = (cardsData as CardListResponse)?.data ?? [];
 
   if (cards.length === 0) {
     return (
