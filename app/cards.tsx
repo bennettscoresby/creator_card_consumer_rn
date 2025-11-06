@@ -2,11 +2,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useCards } from '@/hooks/use-cards';
-import { ActiveCardContext } from '@/Providers/ActiveCardProvider';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { CardResponse } from '@/marqeta-sdk';
-import { router } from 'expo-router';
+import { ActiveCardContext } from '@/Providers/ActiveCardProvider';
 import { useContext, useState } from 'react';
 import {
   ActivityIndicator,
@@ -29,7 +28,6 @@ export default function CardsScreen() {
     try {
       setSelectingCard(card.token);
       await setActiveCard(card.token);
-      router.back(); // Go back to previous screen after selection
     } catch (error) {
       console.error('Failed to set active card:', error);
       alert('Failed to set active card. Please try again.');
@@ -88,7 +86,7 @@ export default function CardsScreen() {
         </View>
 
         <View style={styles.cardsList}>
-          {cards.map((card) => {
+          {cards.map((card: CardResponse) => {
             const isActive = activeCard?.token === card.token;
             const isSelecting = selectingCard === card.token;
 

@@ -1,10 +1,8 @@
 import { Tabs, router } from 'expo-router';
 import React, { useContext, useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -25,19 +23,19 @@ export default function TabLayout() {
   }, [isAuthenticated, didFetch]);
 
   // Show loading screen while cards are loading (only for authenticated users)
-  if (isAuthenticated && isCardLoading) {
-    return (
-      <ThemedView style={styles.loadingContainer}>
-        <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={Colors[theme].tint} />
-          <ThemedText style={styles.loadingText}>Loading your cards...</ThemedText>
-          <ThemedText style={styles.loadingSubtext}>
-            Please wait while we prepare your dashboard
-          </ThemedText>
-        </View>
-      </ThemedView>
-    );
-  }
+  // if (isAuthenticated && isCardLoading) {
+  //   return (
+  //     <ThemedView style={styles.loadingContainer}>
+  //       <View style={styles.loadingContent}>
+  //         <ActivityIndicator size="large" color={Colors[theme].tint} />
+  //         <ThemedText style={styles.loadingText}>Loading your cards...</ThemedText>
+  //         <ThemedText style={styles.loadingSubtext}>
+  //           Please wait while we prepare your dashboard
+  //         </ThemedText>
+  //       </View>
+  //     </ThemedView>
+  //   );
+  // }
 
   return (
     <Tabs

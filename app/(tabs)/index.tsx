@@ -1,13 +1,38 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { getCardTypeFromProductToken } from '@/constants/card-config';
 import { Colors } from '@/constants/theme';
+import { useCards } from '@/hooks/use-cards';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ActiveCardContext } from '@/Providers/ActiveCardProvider';
 import { AuthContext } from '@/Providers/AuthProvider';
 import { router } from 'expo-router';
-import { useContext } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useContext, useRef, useState } from 'react';
+import { Dimensions, FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+
+// Helper function to parse influencer info from metadata
+interface InfluencerInfo {
+  name: string;
+  id: string;
+  imageUrl?: string;
+}
+
+function parseInfluencerFromMetadata(metadata: any): InfluencerInfo | null {
+  if (!metadata) {
+    return null;
+  }
+
+  if (metadata.influencer_name && metadata.influencer_id) {
+    return {
+      name: metadata.influencer_name,
+      id: metadata.influencer_id,
+      imageUrl: metadata.influencer_image_url,
+    };
+  }
+
+  return null;
+}
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
@@ -16,9 +41,146 @@ export default function HomeScreen() {
   const {
     activeCard,
     cardType,
-    cardNumber,
     influencer,
+    setActiveCard,
   } = useContext(ActiveCardContext);
+
+  // Fetch all cards for carousel
+  const { data: cardsData, isLoading: cardsLoading } = useCards();
+  const cards = (cardsData as any)?.data || [];
+
+  // Add "add new card" item to the end of the cards array
+  const addNewCardItem = { token: 'ADD_NEW_CARD', isAddNewCard: true };
+  const cardsWithAddNew = [...cards, addNewCardItem];
+
+  // Carousel state
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const carouselRef = useRef<FlatList>(null);
+  const screenWidth = Dimensions.get('window').width;
+
+
+
+  // Handle carousel scroll end
+  const handleScrollEnd = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset;
+    const viewSize = event.nativeEvent.layoutMeasurement;
+    const pageNum = Math.floor(contentOffset.x / viewSize.width);
+
+    if (pageNum !== currentCardIndex && pageNum < cardsWithAddNew.length) {
+      setCurrentCardIndex(pageNum);
+      // Update active card when user swipes (silently) - but not for "add new card"
+      const newActiveCard = cardsWithAddNew[pageNum];
+      if (newActiveCard?.token && newActiveCard.token !== activeCard?.token && !newActiveCard.isAddNewCard) {
+        setActiveCard(newActiveCard.token)
+          .catch(error => {
+            console.error('Failed to set active card:', error);
+          });
+      }
+    }
+  };
+
+  // Render individual card
+  const renderCard = ({ item: card }: { item: any }) => {
+    // Handle "add new card" case
+    if (card.isAddNewCard) {
+      return (
+        <View style={[styles.cardContainer, { width: screenWidth - 48 }]}>
+          <TouchableOpacity style={[styles.card, styles.addNewCard]}>
+            <View style={styles.addNewCardContent}>
+              <IconSymbol name="plus.circle" size={48} color={Colors[theme].tint} />
+              <ThemedText style={[styles.addNewCardText, { color: Colors[theme].tint }]}>
+                Add New Card
+              </ThemedText>
+              <ThemedText style={styles.addNewCardSubtext}>
+                Tap to add a new influencer card
+              </ThemedText>
+            </View>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // Get card type and influencer info for this specific card
+    const cardTypeForCard = card.card_product_token
+      ? getCardTypeFromProductToken(card.card_product_token)
+      : null;
+    const influencerForCard = card.metadata
+      ? parseInfluencerFromMetadata(card.metadata)
+      : null;
+    const cardNumberForCard = card.last_four ? `**** **** **** ${card.last_four}` : null;
+
+    return (
+      <View style={[styles.cardContainer, { width: screenWidth - 48 }]}>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View>
+              <ThemedText style={styles.balanceLabel}>Balance</ThemedText>
+              <ThemedText style={styles.balanceAmount}>$2,847.5</ThemedText>
+            </View>
+            <View style={styles.influenceSection}>
+              <ThemedText style={styles.influenceLabel}>
+                {cardTypeForCard === 'CREDIT' ? 'CREDIT' : 'PREPAID'}
+              </ThemedText>
+              <ThemedText style={styles.influenceName}>
+                {influencerForCard?.name || 'No Influencer'}
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.cardNumberContainer}>
+            <ThemedText style={styles.cardNumberText}>
+              {cardNumberForCard || 'Card Number N/A'}
+            </ThemedText>
+            <View style={styles.cardIcons}>
+              <IconSymbol name="eye" size={16} color="#ffffff" />
+              <IconSymbol name="doc.on.doc" size={16} color="#ffffff" />
+            </View>
+          </View>
+
+          <View style={styles.cardFooter}>
+            <View>
+              <ThemedText style={styles.cardholderLabel}>CARDHOLDER</ThemedText>
+              <ThemedText style={styles.cardholderName}>
+                {session?.identity?.traits?.first_name} {session?.identity?.traits?.last_name}
+              </ThemedText>
+            </View>
+            <View>
+              <ThemedText style={styles.validThruLabel}>Valid Thru</ThemedText>
+              <ThemedText style={styles.validThruDate}>
+                {card.expiration ?
+                  `${card.expiration.slice(0, 2)}/${card.expiration.slice(2)}` :
+                  'N/A'
+                }
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  // Render card indicators
+  const renderCardIndicators = () => {
+    if (cardsWithAddNew.length <= 1) return null;
+
+    return (
+      <View style={styles.indicatorsContainer}>
+        {cardsWithAddNew.map((_: any, index: number) => (
+          <View
+            key={index}
+            style={[
+              styles.indicator,
+              {
+                backgroundColor: index === currentCardIndex
+                  ? Colors[theme].tint
+                  : theme === 'dark' ? '#444' : '#ccc'
+              }
+            ]}
+          />
+        ))}
+      </View>
+    );
+  };
 
   // Show login prompt if not authenticated
   if (!isAuthenticated) {
@@ -74,52 +236,32 @@ export default function HomeScreen() {
         )}
       </ThemedView>
 
-      {/* Card Display */}
+      {/* Card Carousel */}
       <ThemedView style={[styles.section, { backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa' }]}>
-        {activeCard ? (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View>
-                <ThemedText style={styles.balanceLabel}>Balance</ThemedText>
-                <ThemedText style={styles.balanceAmount}>$2,847.5</ThemedText>
-              </View>
-              <View style={styles.influenceSection}>
-                <ThemedText style={styles.influenceLabel}>
-                  {cardType === 'CREDIT' ? 'CREDIT' : 'PREPAID'}
-                </ThemedText>
-                <ThemedText style={styles.influenceName}>
-                  {influencer?.name || '@TechGuru'}
-                </ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.cardNumberContainer}>
-              <ThemedText style={styles.cardNumberText}>
-                {cardNumber || '**** **** **** ****'}
-              </ThemedText>
-              <View style={styles.cardIcons}>
-                <IconSymbol name="eye" size={16} color="#ffffff" />
-                <IconSymbol name="doc.on.doc" size={16} color="#ffffff" />
-              </View>
-            </View>
-
-            <View style={styles.cardFooter}>
-              <View>
-                <ThemedText style={styles.cardholderLabel}>CARDHOLDER</ThemedText>
-                <ThemedText style={styles.cardholderName}>
-                  {session?.identity?.traits?.first_name} {session?.identity?.traits?.last_name}
-                </ThemedText>
-              </View>
-              <View>
-                <ThemedText style={styles.validThruLabel}>Valid Thru</ThemedText>
-                <ThemedText style={styles.validThruDate}>
-                  {activeCard.expiration || '12/27'}
-                </ThemedText>
-              </View>
-            </View>
-          </View>
+        {!cardsLoading || cardsData ? (
+          <>
+            <FlatList
+              ref={carouselRef}
+              data={cardsWithAddNew}
+              renderItem={renderCard}
+              keyExtractor={(item: any) => item.token || ''}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={handleScrollEnd}
+              getItemLayout={(_data, index) => ({
+                length: screenWidth - 48,
+                offset: (screenWidth - 48) * index,
+                index,
+              })}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={3}
+              windowSize={3}
+            />
+            {renderCardIndicators()}
+          </>
         ) : (
-          <ThemedText style={styles.noCardText}>No card to display</ThemedText>
+          <ThemedText style={styles.loadingText}>Loading cards...</ThemedText>
         )}
       </ThemedView>
 
@@ -471,5 +613,41 @@ const styles = StyleSheet.create({
     padding: 16,
     opacity: 0.7,
     fontStyle: 'italic',
+  },
+  cardContainer: {
+    paddingHorizontal: 24,
+  },
+  indicatorsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 8,
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  addNewCard: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#ccc',
+  },
+  addNewCardContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  addNewCardText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  addNewCardSubtext: {
+    fontSize: 14,
+    opacity: 0.7,
+    textAlign: 'center',
   },
 });
