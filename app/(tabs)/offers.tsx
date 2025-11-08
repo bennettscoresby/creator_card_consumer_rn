@@ -37,7 +37,7 @@ export default function TabTwoScreen() {
           </ThemedText>
         </ThemedView>
         <ThemedText>
-          Please log in to access the Explore section.
+          Please log in to access the Offers section.
         </ThemedText>
       </ParallaxScrollView>
     );
@@ -68,7 +68,7 @@ export default function TabTwoScreen() {
         <ThemedText>
           This app has two screens:{' '}
           <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+          <ThemedText type="defaultSemiBold">app/(tabs)/offers.tsx</ThemedText>
         </ThemedText>
         <ThemedText>
           The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
