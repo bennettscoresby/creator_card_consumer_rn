@@ -7,7 +7,6 @@ import { useCards } from '@/hooks/use-cards';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ActiveCardContext } from '@/Providers/ActiveCardProvider';
 import { AuthContext } from '@/Providers/AuthProvider';
-import { router } from 'expo-router';
 import { useContext, useRef, useState } from 'react';
 import { Dimensions, FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
@@ -113,16 +112,14 @@ export default function HomeScreen() {
       <View style={[styles.cardContainer, { width: screenWidth - 48 }]}>
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <View>
-              <ThemedText style={styles.balanceLabel}>Balance</ThemedText>
-              <ThemedText style={styles.balanceAmount}>$2,847.5</ThemedText>
-            </View>
             <View style={styles.influenceSection}>
-              <ThemedText style={styles.influenceLabel}>
-                {cardTypeForCard === 'CREDIT' ? 'CREDIT' : 'PREPAID'}
-              </ThemedText>
               <ThemedText style={styles.influenceName}>
                 {influencerForCard?.name || 'No Influencer'}
+              </ThemedText>
+            </View>
+            <View style={styles.cardTypeSection}>
+              <ThemedText style={styles.influenceLabel}>
+                {cardTypeForCard === 'CREDIT' ? 'CREDIT' : 'PREPAID'}
               </ThemedText>
             </View>
           </View>
@@ -209,33 +206,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </ThemedView>
 
-      {/* Active Influencer Card Section */}
-      <ThemedView style={[styles.section, { backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa' }]}>
-        <ThemedText style={styles.sectionTitle}>Active Influencer Card</ThemedText>
-        <ThemedText style={styles.sectionSubtitle}>
-          {cardType ? `Card Type: ${cardType}` : 'Choose which influencer to promote with your card'}
-        </ThemedText>
-
-        {activeCard ? (
-          <TouchableOpacity
-            style={[styles.dropdown, { backgroundColor: theme === 'dark' ? '#2a2a2a' : '#ffffff', borderColor: theme === 'dark' ? '#333' : '#e0e0e0' }]}
-            onPress={() => router.push('/cards')}
-          >
-            <View style={styles.dropdownContent}>
-              <ThemedText style={styles.influencerName}>
-                {influencer?.name || '@TechGuru'}
-              </ThemedText>
-              <ThemedText style={styles.influencerCategory}>
-                {cardType || 'Technology'}
-              </ThemedText>
-            </View>
-            <IconSymbol name="chevron.down" size={16} color={Colors[theme].text} />
-          </TouchableOpacity>
-        ) : (
-          <ThemedText style={styles.noCardText}>No cards available</ThemedText>
-        )}
-      </ThemedView>
-
       {/* Card Carousel */}
       <ThemedView style={[styles.section, { backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa' }]}>
         {!cardsLoading || cardsData ? (
@@ -266,25 +236,47 @@ export default function HomeScreen() {
       </ThemedView>
 
       {/* Stats Section */}
-      <ThemedView style={[styles.statsContainer, { backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa' }]}>
-        <View style={[styles.statCard, { backgroundColor: theme === 'dark' ? '#2a2a2a' : '#ffffff' }]}>
-          <View style={styles.statHeader}>
-            <IconSymbol name="dollarsign.circle" size={20} color={Colors[theme].tint} />
-            <ThemedText style={styles.statTitle}>This Month</ThemedText>
+      <ThemedView style={[styles.statsSection, { backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa' }]}>
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: theme === 'dark' ? '#2a2a2a' : '#ffffff' }]}>
+            <View style={styles.statHeader}>
+              <IconSymbol name="creditcard" size={20} color="#2196F3" />
+              <ThemedText style={styles.statTitle}>GPA Balance</ThemedText>
+            </View>
+            <ThemedText style={styles.statAmount}>$2,847.50</ThemedText>
+            <ThemedText style={styles.statSubtext}>Available balance</ThemedText>
           </View>
-          <ThemedText style={styles.statAmount}>$1,234</ThemedText>
-          <ThemedText style={styles.statSubtext}>Total spent</ThemedText>
-          <ThemedText style={[styles.statChange, { color: '#4CAF50' }]}>+12% vs last month</ThemedText>
+
+          <View style={[styles.statCard, { backgroundColor: theme === 'dark' ? '#2a2a2a' : '#ffffff' }]}>
+            <View style={styles.statHeader}>
+              <IconSymbol name="dollarsign.circle" size={20} color={Colors[theme].tint} />
+              <ThemedText style={styles.statTitle}>This Month</ThemedText>
+            </View>
+            <ThemedText style={styles.statAmount}>$1,234</ThemedText>
+            <ThemedText style={styles.statSubtext}>Total spent</ThemedText>
+            <ThemedText style={[styles.statChange, { color: '#4CAF50' }]}>+12% vs last month</ThemedText>
+          </View>
         </View>
 
-        <View style={[styles.statCard, { backgroundColor: theme === 'dark' ? '#2a2a2a' : '#ffffff' }]}>
-          <View style={styles.statHeader}>
-            <IconSymbol name="gift" size={20} color="#9C27B0" />
-            <ThemedText style={styles.statTitle}>Rewards Earned</ThemedText>
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: theme === 'dark' ? '#2a2a2a' : '#ffffff' }]}>
+            <View style={styles.statHeader}>
+              <IconSymbol name="gift" size={20} color="#9C27B0" />
+              <ThemedText style={styles.statTitle}>Rewards Earned</ThemedText>
+            </View>
+            <ThemedText style={styles.statAmount}>$89</ThemedText>
+            <ThemedText style={styles.statSubtext}>This month</ThemedText>
+            <ThemedText style={[styles.statChange, { color: '#4CAF50' }]}>+8% vs last month</ThemedText>
           </View>
-          <ThemedText style={styles.statAmount}>$89</ThemedText>
-          <ThemedText style={styles.statSubtext}>This month</ThemedText>
-          <ThemedText style={[styles.statChange, { color: '#4CAF50' }]}>+8% vs last month</ThemedText>
+
+          <View style={[styles.statCard, { backgroundColor: theme === 'dark' ? '#2a2a2a' : '#ffffff' }]}>
+            <View style={styles.statHeader}>
+              <IconSymbol name="person.fill" size={20} color="#FF9800" />
+              <ThemedText style={styles.statTitle}>Top Creator</ThemedText>
+            </View>
+            <ThemedText style={styles.statAmount}>@TechGuru</ThemedText>
+            <ThemedText style={styles.statSubtext}>Most used</ThemedText>
+          </View>
         </View>
       </ThemedView>
 
@@ -449,18 +441,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 24,
   },
-  balanceLabel: {
-    color: '#ffffff',
-    fontSize: 14,
-    opacity: 0.8,
-    marginBottom: 4,
-  },
-  balanceAmount: {
-    color: '#ffffff',
-    fontSize: 28,
-    fontWeight: '600',
-  },
   influenceSection: {
+    alignItems: 'flex-start',
+  },
+  cardTypeSection: {
     alignItems: 'flex-end',
   },
   influenceLabel: {
@@ -471,7 +455,7 @@ const styles = StyleSheet.create({
   },
   influenceName: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '500',
   },
   cardNumberContainer: {
@@ -518,11 +502,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  statsContainer: {
-    flexDirection: 'row',
+  statsSection: {
     paddingHorizontal: 24,
-    gap: 12,
     marginBottom: 24,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
   },
   statCard: {
     flex: 1,
