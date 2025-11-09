@@ -53,6 +53,7 @@ interface ActiveCardContextValue {
   setActiveCard: (cardToken: string) => Promise<void>;
   refreshCard: () => Promise<void>;
   clearActiveCard: () => void;
+  updateInfluencer: (cardToken: string, influencerId: string) => Promise<void>;
 
   // Loading states
   isLoading: boolean;
@@ -70,6 +71,7 @@ export const ActiveCardContext = createContext<ActiveCardContextValue>({
   setActiveCard: async () => { },
   refreshCard: async () => { },
   clearActiveCard: () => { },
+  updateInfluencer: async () => { },
   isLoading: false,
   error: null,
 });
@@ -205,6 +207,43 @@ export default function ActiveCardProvider({ children }: ActiveCardProviderProps
   };
 
   /**
+   * Update influencer for a specific card
+   */
+  const updateInfluencer = async (cardToken: string, influencerId: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Get current card to preserve existing metadata
+      const currentCard = await marqetaService.getCard(cardToken);
+
+      // Update metadata with new influencer_id
+      const updatedMetadata = {
+        ...currentCard.metadata,
+        influencer_id: influencerId,
+      };
+
+      // Update the card
+      await marqetaService.updateCard(cardToken, {
+        token: cardToken,
+        metadata: updatedMetadata,
+      });
+
+      // Refresh card details to get updated data
+      await fetchCardDetails(cardToken);
+
+      console.log('Successfully updated influencer to ID:', influencerId);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to update influencer');
+      setError(error);
+      console.error('Failed to update influencer:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
    * Load active card on mount or when authentication changes
    */
   useEffect(() => {
@@ -272,6 +311,7 @@ export default function ActiveCardProvider({ children }: ActiveCardProviderProps
         setActiveCard,
         refreshCard,
         clearActiveCard,
+        updateInfluencer,
         isLoading,
         error,
       }}

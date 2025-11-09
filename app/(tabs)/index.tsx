@@ -42,6 +42,7 @@ export default function HomeScreen() {
     cardType,
     influencer,
     setActiveCard,
+    updateInfluencer,
   } = useContext(ActiveCardContext);
 
   // Fetch all cards for carousel
@@ -108,15 +109,25 @@ export default function HomeScreen() {
       : null;
     const cardNumberForCard = card.last_four ? `**** **** **** ${card.last_four}` : null;
 
+    // Handler for influencer click
+    const handleInfluencerClick = async () => {
+      try {
+        await updateInfluencer(card.token, '1');
+        console.log('Influencer updated to ID 1 for card:', card.token);
+      } catch (error) {
+        console.error('Failed to update influencer:', error);
+      }
+    };
+
     return (
       <View style={[styles.cardContainer, { width: screenWidth - 48 }]}>
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <View style={styles.influenceSection}>
+            <TouchableOpacity style={styles.influenceSection} onPress={handleInfluencerClick}>
               <ThemedText style={styles.influenceName}>
                 {influencerForCard?.name || 'No Influencer'}
               </ThemedText>
-            </View>
+            </TouchableOpacity>
             <View style={styles.cardTypeSection}>
               <ThemedText style={styles.influenceLabel}>
                 {cardTypeForCard === 'CREDIT' ? 'CREDIT' : 'PREPAID'}

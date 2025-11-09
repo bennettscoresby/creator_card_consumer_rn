@@ -8,6 +8,7 @@ import {
   CardProductsApi,
   CardResponse,
   CardsApi,
+  CardUpdateRequest,
   Configuration,
   UserCardHolderResponse,
   UsersApi
@@ -133,6 +134,17 @@ class MarqetaService {
       return response.data;
     } catch (error) {
       console.error('Marqeta get card product failed:', error);
+      throw error;
+    }
+  }
+
+  async updateCard(cardToken: string, updateData: CardUpdateRequest): Promise<CardResponse> {
+    try {
+      console.log('Updating card:', cardToken, 'with data:', updateData);
+      const response = await this.cardsApi.putCardsToken(cardToken, updateData);
+      return response.data;
+    } catch (error) {
+      console.error('Marqeta update card failed:', error);
       throw error;
     }
   }
